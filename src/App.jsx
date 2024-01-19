@@ -64,7 +64,16 @@ function App() {
         : [[newObject]];
     });
   };
-
+  const handleManualResize = (id) => {
+    const textarea = textAreaRefs.current[id];
+    if (textarea) {
+      const currentHeight = textarea.offsetHeight;
+      if (textarea.prevHeight !== currentHeight) {
+        textarea.prevHeight = currentHeight; // Store the current height
+        handleHeightAdjustment(id);
+      }
+    }
+  };
   const handleHeightAdjustment = (id) => {
     const textarea = textAreaRefs.current[id];
     if (textarea) {
@@ -112,13 +121,20 @@ function App() {
           {layout.map((obj) => (
             <div key={obj.id} className="object-container">
               <textarea
-                ref={(el) => (textAreaRefs.current[obj.id] = el)}
+                ref={(el) => {
+                  textAreaRefs.current[obj.id] = el;
+                  if (el) {
+                    el.prevHeight = el.offsetHeight; // Initialize prevHeight
+                    el.onmousemove = () => handleManualResize(obj.id);
+                  }
+                }}
                 value={obj.text}
                 onChange={(e) => handleChange(obj.id, e.target.value)}
                 style={{
                   fontSize: 20,
                   // height: `${obj.height}px`,
-                  height: `100px`,
+                  height: `90px`,
+
                   overflow: "hidden",
                 }}
               ></textarea>
