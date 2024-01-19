@@ -5,8 +5,8 @@ function App() {
   const getRandomHeight = () => Math.floor(Math.random() * (91 - 80) + 80);
 
   const initialObjects = [
-    { id: 1, text: "Text 1", height: getRandomHeight(), userChanged: false },
-    { id: 2, text: "Text 2", height: getRandomHeight(), userChanged: false },
+    { id: 1, text: "Text 1", height: getRandomHeight(), userChanged: true },
+    { id: 2, text: "Text 2", height: getRandomHeight(), userChanged: true },
   ];
 
   const [layouts, setLayouts] = useState([initialObjects]);
@@ -54,7 +54,7 @@ function App() {
       id: newId,
       text: "Random text " + newId,
       height: getRandomHeight(),
-      userChanged: false,
+      userChanged: true,
     };
 
     setLayouts((prevLayouts) => {
@@ -69,22 +69,23 @@ function App() {
     if (textarea) {
       const currentHeight = textarea.offsetHeight;
       if (textarea.prevHeight !== currentHeight) {
-        textarea.prevHeight = currentHeight; // Store the current height
+        textarea.prevHeight = currentHeight; // Update the stored height
         handleHeightAdjustment(id);
       }
     }
   };
+
   const handleHeightAdjustment = (id) => {
     const textarea = textAreaRefs.current[id];
     if (textarea) {
-      // Temporarily reset the height to 'auto' to get the correct scrollHeight
+      // Calculate the new height
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
       textarea.style.height = `${scrollHeight}px`;
 
-      // Check if the height has changed, then update layouts
+      // Update layout if height has changed
       if (textarea.objHeight !== scrollHeight) {
-        textarea.objHeight = scrollHeight; // Store the new height
+        textarea.objHeight = scrollHeight; // Update stored height
         const updatedLayouts = layouts.map((layout) =>
           layout.map((obj) =>
             obj.id === id
@@ -93,7 +94,7 @@ function App() {
           )
         );
         setLayouts(updatedLayouts);
-        // adjustLayouts();
+        adjustLayouts();
       }
     }
   };
