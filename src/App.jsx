@@ -1,16 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import "./Centerbox.css";
 
 function App() {
   const getRandomHeight = () => Math.floor(Math.random() * (91 - 80) + 80);
 
-  const initialObjects = [
-    { id: 1, text: "Text 1", height: getRandomHeight(), userChanged: true },
-    { id: 2, text: "Text 2", height: getRandomHeight(), userChanged: true },
-  ];
-
+  const initialObjects = [];
   const [layouts, setLayouts] = useState([initialObjects]);
   const textAreaRefs = useRef({});
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+
+    // Dropped outside the list or no movement
+    if (
+      !destination ||
+      (source.droppableId === destination.droppableId &&
+        source.index === destination.index)
+    ) {
+      return;
+    }
+
+    // Clone the current layouts array
+    const newLayouts = layouts.map((layout) => [...layout]);
+
+    // Extract the dragged item
+    const [reorderedItem] = newLayouts[0].splice(source.index, 1);
+
+    // Insert the dragged item at its new position
+    newLayouts[0].splice(destination.index, 0, reorderedItem);
+
+    // Update state with the new layouts
+    setLayouts(newLayouts);
+  };
 
   const adjustLayouts = () => {
     const newLayouts = [];
@@ -80,8 +101,7 @@ function App() {
   };
 
   const clickme = () => {
-    const newId =
-      layouts.flat().reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
+    const newId = `item-${layouts.flat().length + 1}`;
     const newObject = {
       id: newId,
       text: "Random text " + newId,
@@ -102,30 +122,55 @@ function App() {
       <button title="Click me" onClick={clickme}>
         Click Me
       </button>
-      {layouts.map((layout, layoutIndex) => (
-        <div key={layoutIndex} className="centered-box">
-          {layout.map((obj) => (
-            <div key={obj.id} className="object-container">
-              <textarea
-                ref={(el) => {
-                  textAreaRefs.current[obj.id] = el;
-                  if (el) {
-                    el.prevHeight = el.offsetHeight;
-                    el.onmousemove = () => handleManualResize(obj.id);
-                  }
-                }}
-                value={obj.text}
-                onChange={(e) => handleChange(obj.id, e.target.value)}
-                style={{
-                  fontSize: 20,
-                  height: `100px`,
-                  overflow: "hidden",
-                }}
-              ></textarea>
-            </div>
-          ))}
-        </div>
-      ))}
+      <DragDropContext onDragEnd={onDragEnd}>
+        {layouts.map((layout, layoutIndex) => {
+          const droppableId = `droppable-${layoutIndex}`; // Ensure unique ID for each Droppable
+
+          return (
+            <Droppable key={droppableId} droppableId={droppableId}>
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="centered-box"
+                >
+                  {layout.map((obj, index) => (
+                    <Draggable key={obj.id} draggableId={obj.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="object-container"
+                        >
+                          <textarea
+                            ref={(el) => (textAreaRefs.current[obj.id] = el)}
+                            value={obj.text}
+                            onChange={(e) =>
+                              handleChange(obj.id, e.target.value)
+                            }
+                            style={{
+                              fontSize: 20,
+                              height: `100px`,
+                              overflow: "hidden",
+                            }}
+                          ></textarea>
+                          <div
+                            {...provided.dragHandleProps}
+                            className="drag-handle"
+                          >
+                            Drag Handle
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          );
+        })}
+      </DragDropContext>
     </div>
   );
 }

@@ -35,3 +35,8 @@ body, html {
 .lower-box{
     background-color: aliceblue;
 }
+.object-container{
+    display: flex;
+    text-align: center;
+    margin: 5px;
+}
