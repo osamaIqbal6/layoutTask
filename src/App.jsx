@@ -1,140 +1,126 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Centerbox.css";
 
 function App() {
   const getRandomHeight = () => Math.floor(Math.random() * (91 - 80) + 80);
 
-  // Initialize your objects here
   const initialObjects = [
-    { id: 1, heading: "1", text: "Text 1", height: getRandomHeight() },
-    { id: 2, heading: "2", text: "Text 2", height: getRandomHeight() },
-    // More objects as needed
+    { id: 1, text: "Text 1", height: getRandomHeight(), userChanged: false },
+    { id: 2, text: "Text 2", height: getRandomHeight(), userChanged: false },
   ];
 
-  // State to manage multiple layouts
   const [layouts, setLayouts] = useState([initialObjects]);
-  const layoutRefs = useRef([]);
+  const textAreaRefs = useRef({});
 
-  useEffect(() => {
-    // Create a ResizeObserver to distribute objects across layouts based on height
-    const observer = new ResizeObserver((entries) => {
-      let newLayouts = [[]];
-      let currentLayoutIndex = 0;
-      let currentHeight = 0;
-
-      layouts.flat().forEach((obj) => {
-        const objHeight = obj.height;
-
-        if (currentHeight + objHeight <= 500) {
-          currentHeight += objHeight;
-          newLayouts[currentLayoutIndex].push(obj);
-        } else {
-          currentLayoutIndex++;
-          currentHeight = objHeight;
-          newLayouts[currentLayoutIndex] = [obj];
-        }
-      });
-
-      setLayouts(newLayouts);
-    });
-
-    layoutRefs.current.forEach((layoutRef) => {
-      if (layoutRef) {
-        observer.observe(layoutRef);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, [layouts]);
-  useEffect(() => {
-    // Create a ResizeObserver to adjust layouts based on rendered heights
-    const observer = new ResizeObserver(adjustLayouts);
-
-    layoutRefs.current.forEach((layoutRef) => {
-      if (layoutRef) {
-        observer.observe(layoutRef);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, [layouts]);
-  const clickme = () => {
-    const newId = layouts.flat().length + 1;
-    const randomText =
-      "Random text " + Math.random().toString(36).substring(2, 15);
-
-    const newObject = {
-      id: newId,
-      heading: newId.toString(),
-      text: randomText,
-      height: getRandomHeight(),
-    };
-
-    setLayouts((prevLayouts) => {
-      const lastLayout = prevLayouts[prevLayouts.length - 1];
-      if (lastLayout) {
-        return [...prevLayouts.slice(0, -1), [...lastLayout, newObject]];
-      }
-      return [[newObject]]; // In case there are no layouts yet
-    });
-  };
   const adjustLayouts = () => {
     let newLayouts = [[]];
     let currentLayoutIndex = 0;
     let currentHeight = 0;
 
     layouts.flat().forEach((obj) => {
-      const textarea = textAreaRefs.current[obj.id];
-      const objHeight = textarea ? textarea.clientHeight : obj.height;
+      const objHeight = obj.userChanged
+        ? textAreaRefs.current[obj.id].scrollHeight
+        : obj.height;
 
-      if (currentHeight + objHeight <= 550) {
+      if (currentHeight + objHeight <= 450) {
         currentHeight += objHeight;
-        newLayouts[currentLayoutIndex].push(obj);
+        newLayouts[currentLayoutIndex].push({ ...obj, height: objHeight });
       } else {
         currentLayoutIndex++;
         currentHeight = objHeight;
-        newLayouts[currentLayoutIndex] = [obj];
+        newLayouts[currentLayoutIndex] = [{ ...obj, height: objHeight }];
       }
     });
 
     setLayouts(newLayouts);
   };
-  const handleChangeFirstObjects = (id, newText) => {
-    // ... existing logic to handle text change
-    autoResizeTextarea(id);
-    adjustLayouts(); // Trigger layout adjustment on textarea change
+
+  useEffect(() => {
+    const observer = new ResizeObserver(adjustLayouts);
+    Object.values(textAreaRefs.current).forEach((textarea) => {
+      if (textarea) observer.observe(textarea);
+    });
+
+    return () => observer.disconnect();
+  }, [layouts]);
+  useEffect(() => {
+    // Call adjustLayouts whenever layouts state changes
+    adjustLayouts();
+  }, [layouts]);
+  const clickme = () => {
+    const newId =
+      layouts.flat().reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
+    const newObject = {
+      id: newId,
+      text: "Random text " + newId,
+      height: getRandomHeight(),
+      userChanged: false,
+    };
+
+    setLayouts((prevLayouts) => {
+      const lastLayout = prevLayouts[prevLayouts.length - 1];
+      return lastLayout
+        ? [...prevLayouts.slice(0, -1), [...lastLayout, newObject]]
+        : [[newObject]];
+    });
   };
-  // Render each layout and its objects
+
+  const handleHeightAdjustment = (id) => {
+    const textarea = textAreaRefs.current[id];
+    if (textarea) {
+      // Temporarily reset the height to 'auto' to get the correct scrollHeight
+      textarea.style.height = "auto";
+      const scrollHeight = textarea.scrollHeight;
+      textarea.style.height = `${scrollHeight}px`;
+
+      // Check if the height has changed, then update layouts
+      if (textarea.objHeight !== scrollHeight) {
+        textarea.objHeight = scrollHeight; // Store the new height
+        const updatedLayouts = layouts.map((layout) =>
+          layout.map((obj) =>
+            obj.id === id
+              ? { ...obj, height: scrollHeight, userChanged: true }
+              : obj
+          )
+        );
+        setLayouts(updatedLayouts);
+        // adjustLayouts();
+      }
+    }
+  };
+
+  const handleChange = (id, newText) => {
+    // Update the text and mark userChanged as true
+    const updatedLayouts = layouts.map((layout) =>
+      layout.map((obj) =>
+        obj.id === id ? { ...obj, text: newText, userChanged: true } : obj
+      )
+    );
+    setLayouts(updatedLayouts);
+
+    // Adjust the height of the textarea
+    handleHeightAdjustment(id);
+  };
+
   return (
     <div className="maindiv">
-      <button
-        title="Click me"
-        onClick={clickme}
-        style={
-          {
-            /* your styles */
-          }
-        }
-      >
+      <button title="Click me" onClick={clickme}>
         Click Me
       </button>
-
       {layouts.map((layout, layoutIndex) => (
-        <div
-          key={layoutIndex}
-          className="centered-box"
-          ref={(el) => (layoutRefs.current[layoutIndex] = el)}
-        >
+        <div key={layoutIndex} className="centered-box">
           {layout.map((obj) => (
             <div key={obj.id} className="object-container">
               <textarea
+                ref={(el) => (textAreaRefs.current[obj.id] = el)}
                 value={obj.text}
+                onChange={(e) => handleChange(obj.id, e.target.value)}
                 style={{
                   fontSize: 20,
-                  height: `${obj.height}px`,
+                  // height: `${obj.height}px`,
+                  height: `100px`,
                   overflow: "hidden",
                 }}
-                readOnly
               ></textarea>
             </div>
           ))}
