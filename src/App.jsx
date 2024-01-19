@@ -13,24 +13,26 @@ function App() {
   const textAreaRefs = useRef({});
 
   const adjustLayouts = () => {
-    let newLayouts = [[]];
-    let currentLayoutIndex = 0;
+    const newLayouts = [];
+    let currentLayout = [];
     let currentHeight = 0;
 
     layouts.flat().forEach((obj) => {
       const objHeight = obj.userChanged
         ? textAreaRefs.current[obj.id].scrollHeight
         : obj.height;
-
-      if (currentHeight + objHeight <= 450) {
-        currentHeight += objHeight;
-        newLayouts[currentLayoutIndex].push({ ...obj, height: objHeight });
-      } else {
-        currentLayoutIndex++;
-        currentHeight = objHeight;
-        newLayouts[currentLayoutIndex] = [{ ...obj, height: objHeight }];
+      if (currentHeight + objHeight > 500 && currentLayout.length) {
+        newLayouts.push(currentLayout);
+        currentLayout = [];
+        currentHeight = 0;
       }
+      currentHeight += objHeight;
+      currentLayout.push({ ...obj, height: objHeight });
     });
+
+    if (currentLayout.length) {
+      newLayouts.push(currentLayout);
+    }
 
     setLayouts(newLayouts);
   };
@@ -38,15 +40,45 @@ function App() {
   useEffect(() => {
     const observer = new ResizeObserver(adjustLayouts);
     Object.values(textAreaRefs.current).forEach((textarea) => {
-      if (textarea) observer.observe(textarea);
+      if (textarea) {
+        observer.observe(textarea);
+      }
     });
 
     return () => observer.disconnect();
   }, [layouts]);
-  useEffect(() => {
-    // Call adjustLayouts whenever layouts state changes
-    adjustLayouts();
-  }, [layouts]);
+
+  const handleManualResize = (id) => {
+    const textarea = textAreaRefs.current[id];
+    if (textarea && textarea.prevHeight !== textarea.offsetHeight) {
+      textarea.prevHeight = textarea.offsetHeight;
+      handleHeightAdjustment(id);
+    }
+  };
+
+  const handleHeightAdjustment = (id) => {
+    const textarea = textAreaRefs.current[id];
+    if (textarea) {
+      const scrollHeight = textarea.scrollHeight;
+      if (textarea.objHeight !== scrollHeight) {
+        textarea.style.height = `${scrollHeight}px`;
+        textarea.objHeight = scrollHeight;
+        adjustLayouts();
+      }
+    }
+  };
+
+  const handleChange = (id, newText) => {
+    setLayouts(
+      layouts.map((layout) =>
+        layout.map((obj) =>
+          obj.id === id ? { ...obj, text: newText, userChanged: true } : obj
+        )
+      )
+    );
+    handleHeightAdjustment(id);
+  };
+
   const clickme = () => {
     const newId =
       layouts.flat().reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
@@ -64,53 +96,6 @@ function App() {
         : [[newObject]];
     });
   };
-  const handleManualResize = (id) => {
-    const textarea = textAreaRefs.current[id];
-    if (textarea) {
-      const currentHeight = textarea.offsetHeight;
-      if (textarea.prevHeight !== currentHeight) {
-        textarea.prevHeight = currentHeight; // Update the stored height
-        handleHeightAdjustment(id);
-      }
-    }
-  };
-
-  const handleHeightAdjustment = (id) => {
-    const textarea = textAreaRefs.current[id];
-    if (textarea) {
-      // Calculate the new height
-      textarea.style.height = "auto";
-      const scrollHeight = textarea.scrollHeight;
-      textarea.style.height = `${scrollHeight}px`;
-
-      // Update layout if height has changed
-      if (textarea.objHeight !== scrollHeight) {
-        textarea.objHeight = scrollHeight; // Update stored height
-        const updatedLayouts = layouts.map((layout) =>
-          layout.map((obj) =>
-            obj.id === id
-              ? { ...obj, height: scrollHeight, userChanged: true }
-              : obj
-          )
-        );
-        setLayouts(updatedLayouts);
-        adjustLayouts();
-      }
-    }
-  };
-
-  const handleChange = (id, newText) => {
-    // Update the text and mark userChanged as true
-    const updatedLayouts = layouts.map((layout) =>
-      layout.map((obj) =>
-        obj.id === id ? { ...obj, text: newText, userChanged: true } : obj
-      )
-    );
-    setLayouts(updatedLayouts);
-
-    // Adjust the height of the textarea
-    handleHeightAdjustment(id);
-  };
 
   return (
     <div className="maindiv">
@@ -125,7 +110,7 @@ function App() {
                 ref={(el) => {
                   textAreaRefs.current[obj.id] = el;
                   if (el) {
-                    el.prevHeight = el.offsetHeight; // Initialize prevHeight
+                    el.prevHeight = el.offsetHeight;
                     el.onmousemove = () => handleManualResize(obj.id);
                   }
                 }}
@@ -133,9 +118,7 @@ function App() {
                 onChange={(e) => handleChange(obj.id, e.target.value)}
                 style={{
                   fontSize: 20,
-                  // height: `${obj.height}px`,
-                  height: `90px`,
-
+                  height: `100px`,
                   overflow: "hidden",
                 }}
               ></textarea>
