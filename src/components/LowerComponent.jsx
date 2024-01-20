@@ -1,16 +1,25 @@
 import React from "react";
+import "../Centerbox.css";
 
 function Lowercomponent({ secondobjects }) {
   return (
     <div className="lower-box">
-      <ul>
-        {secondobjects.map((obj) => (
-         <div key={obj.id} className="object-container">
-         <h2>{obj.heading}</h2>
-         <textarea value={obj.text}></textarea>
-       </div>
-        ))}
-      </ul>
+      <textarea
+        style={{
+          fontSize: 20,
+          height: `100px`,
+          overflow: "hidden",
+          marginBottom: 10,
+        }}
+      ></textarea>
+      <textarea
+        style={{
+          fontSize: 20,
+          height: `100px`,
+          overflow: "hidden",
+          marginBottom: 10,
+        }}
+      ></textarea>
     </div>
   );
 }
