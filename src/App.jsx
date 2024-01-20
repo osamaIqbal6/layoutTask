@@ -5,7 +5,46 @@ import "./Centerbox.css";
 function App() {
   const getRandomHeight = () => Math.floor(Math.random() * (91 - 80) + 80);
 
-  const initialObjects = [];
+  const initialObjects = [
+    {
+      id: "item-1",
+      text: "Random text 1",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+    {
+      id: "item-2",
+      text: "Random text 2",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+    {
+      id: "item-3",
+      text: "Random text 3",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+    {
+      id: "item-4",
+      text: "Random text 4",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+    {
+      id: "item-5",
+      text: "Random text 5",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+    {
+      id: "item-6",
+      text: "Random text 6",
+      height: getRandomHeight(),
+      userChanged: true,
+    },
+  ];
+
+  // Initialize the layouts state with the initial objects wrapped in an array
   const [layouts, setLayouts] = useState([initialObjects]);
   const textAreaRefs = useRef({});
   const onDragEnd = (result) => {
@@ -20,16 +59,29 @@ function App() {
       return;
     }
 
-    // Clone the current layouts array
-    const newLayouts = layouts.map((layout) => [...layout]);
+    // Create a new copy of the layouts array
+    const newLayouts = [...layouts];
 
-    // Extract the dragged item
-    const [reorderedItem] = newLayouts[0].splice(source.index, 1);
+    // Convert droppableId to an array index if necessary
+    const sourceIndex = parseInt(source.droppableId.split("-")[1], 10);
+    const destinationIndex = parseInt(
+      destination.droppableId.split("-")[1],
+      10
+    );
 
-    // Insert the dragged item at its new position
-    newLayouts[0].splice(destination.index, 0, reorderedItem);
+    // Check if the source and destination arrays exist
+    if (!newLayouts[sourceIndex] || !newLayouts[destinationIndex]) {
+      console.error("Invalid droppableId: arrays not found");
+      return;
+    }
 
-    // Update state with the new layouts
+    // Extract the dragged item from its original position
+    const [reorderedItem] = newLayouts[sourceIndex].splice(source.index, 1);
+
+    // Insert the dragged item into its new position
+    newLayouts[destinationIndex].splice(destination.index, 0, reorderedItem);
+
+    // Update the state with the new layouts
     setLayouts(newLayouts);
   };
 
@@ -116,16 +168,26 @@ function App() {
         : [[newObject]];
     });
   };
-
+  const handleDownloadClick = async () => {
+    const response = await fetch("http://192.168.18.57:3001/generate-pdf");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "page.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
   return (
     <div className="maindiv">
-      <button title="Click me" onClick={clickme}>
+      <button title="Click me" id="clickme" onClick={clickme}>
         Click Me
       </button>
+      <button onClick={handleDownloadClick}>Download as PDF</button>
       <DragDropContext onDragEnd={onDragEnd}>
         {layouts.map((layout, layoutIndex) => {
           const droppableId = `droppable-${layoutIndex}`; // Ensure unique ID for each Droppable
-
           return (
             <Droppable key={droppableId} droppableId={droppableId}>
               {(provided) => (
