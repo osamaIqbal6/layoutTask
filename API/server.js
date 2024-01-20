@@ -24,7 +24,11 @@ app.get("/generate-pdf", async (req, res) => {
     await page1.goto(baseUrl + "/1", { waitUntil: "networkidle0" });
 
     // Capture a screenshot of route /1 as PDF with custom size
-    const pdf1 = await page1.pdf({ width: "700px", height: "800px" });
+    const pdf1 = await page1.pdf({
+      width: "700px",
+      height: "800px",
+      printBackground: true,
+    });
 
     // Close the Puppeteer browser instance for /1
     await browser1.close();
@@ -37,7 +41,11 @@ app.get("/generate-pdf", async (req, res) => {
     await page2.goto(baseUrl + "/2", { waitUntil: "networkidle0" });
 
     // Capture a screenshot of route /2 as PDF with custom size
-    const pdf2 = await page2.pdf({ width: "700px", height: "800px" });
+    const pdf2 = await page2.pdf({
+      width: "700px",
+      height: "800px",
+      printBackground: true,
+    });
 
     // Close the Puppeteer browser instance for /2
     await browser2.close();
