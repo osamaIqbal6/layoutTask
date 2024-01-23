@@ -8,11 +8,10 @@ body, html {
 
 .maindiv {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-    width: 600px;
-    gap: 20px; /* Optional: adds some space between the boxes */
+    width: 700px;
     margin-top: 50px; /* Adds some space at the top */
     margin-bottom: 50px; /* Adds some space at the bottom */
 }
@@ -22,8 +21,8 @@ body, html {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    width: 600px;
-    height: 600px;
+    width: 700px;
+    height: 700px;
     padding-top: 30px;
     padding-left: 20px;
     /* Your existing styles for color, etc. */
