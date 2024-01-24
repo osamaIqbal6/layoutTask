@@ -25,6 +25,7 @@ body, html {
     height: 700px;
     padding-top: 30px;
     padding-left: 20px;
+    margin: 10px;
     /* Your existing styles for color, etc. */
 }
 
@@ -39,3 +40,40 @@ body, html {
     text-align: center;
     margin: 5px;
 }
+
+.page-container {
+    column-width: 600px;
+    column-gap: 20px;
+    height: 600px;
+    overflow: auto;
+    width: 100%; /* Adjust as necessary */
+    padding: 15px; /* For internal spacing */
+  }
+  
+  .resume-section {
+    break-inside: avoid; /* Prevents sections from splitting across columns */
+    margin-bottom: 15px; /* Spacing between sections */
+    /* Additional styling as needed */
+  }
+  
+  h3 {
+    margin-top: 0; /* Style headings as needed */
+  }
+  .hidden {
+    visibility: hidden;
+    position: absolute;
+    left: -9999px;
+  }
+  
+  .page {
+    height: 600px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  .resume-section {
+    /* Styles for each section */
+    margin-bottom: 10px;
+  }
+  
+  
