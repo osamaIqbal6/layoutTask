@@ -3,36 +3,35 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import "../Centerbox.css";
 
 function Main() {
-
   const initialLayouts = [
     {
       items: [
         {
-          groupTitle: "Experiences", // Add groupTitle field to items
+          groupTitle: "Experiences",
           id: "item-1-1",
           text: "Hello 1",
-         
+          groupid: 0,
           userChanged: true,
         },
         {
-          groupTitle: "Experiences", // Add groupTitle field to items
+          groupTitle: "Experiences",
           id: "item-1-2",
           text: "Hello 2",
-         
+          groupid: 0,
           userChanged: true,
         },
         {
-          groupTitle: "Experiences", // Add groupTitle field to items
+          groupTitle: "Experiences",
           id: "item-1-3",
           text: "Hello 3",
-         
+          groupid: 0,
           userChanged: true,
         },
         {
-          groupTitle: "Experiences", // Add groupTitle field to items
+          groupTitle: "Experiences",
           id: "item-1-4",
           text: "Hello 4",
-         
+          groupid: 0,
           userChanged: true,
         },
       ],
@@ -40,35 +39,51 @@ function Main() {
     {
       items: [
         {
-          groupTitle: "Projects", // Add groupTitle field to items
+          groupTitle: "Projects",
           id: "item-2-1",
           text: "Bye 1",
-         
+          groupid: 1,
           userChanged: true,
         },
         {
-          groupTitle: "Projects", // Add groupTitle field to items
+          groupTitle: "Projects",
           id: "item-2-2",
           text: "Bye 2",
-         
+          groupid: 1,
           userChanged: true,
         },
         {
-          groupTitle: "Projects", // Add groupTitle field to items
+          groupTitle: "Projects",
           id: "item-2-3",
           text: "Bye 3",
-         
+          groupid: 1,
           userChanged: true,
         },
       ],
     },
-
-    // More groups can be added here
   ];
 
   const [displayLayouts, setDisplayLayouts] = useState(initialLayouts);
   const [layouts, setLayouts] = useState(initialLayouts);
   const textAreaRefs = useRef({});
+
+  // Helper function to check if layouts are the same
+  const areLayoutsSame = (layouts, displayLayouts) => {
+    if (layouts.length !== displayLayouts.length) {
+      return false;
+    }
+
+    for (let i = 0; i < layouts.length; i++) {
+      if (
+        layouts[i].items.length !== displayLayouts[i].items.length ||
+        layouts[i].groupTitle !== displayLayouts[i].groupTitle
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
@@ -77,111 +92,82 @@ function Main() {
       return;
     }
 
-    const newLayouts = Array.from(layouts);
+    // Check if layouts and displayLayouts are the same
+    const sameLayouts = areLayoutsSame(layouts, displayLayouts);
 
-    // Swap the items and group titles of the source and destination groups
-    const tempItems = newLayouts[source.index].items;
-    const tempTitle = newLayouts[source.index].groupTitle;
+    if (sameLayouts) {
+      // Perform the current switching operation
+      const newLayouts = Array.from(layouts);
+      const tempItems = newLayouts[source.index].items;
+      const tempTitle = newLayouts[source.index].groupTitle;
 
-    newLayouts[source.index].items = newLayouts[destination.index].items;
-    newLayouts[source.index].groupTitle =
-      newLayouts[destination.index].groupTitle;
+      newLayouts[source.index].items = newLayouts[destination.index].items;
+      newLayouts[source.index].groupTitle =
+        newLayouts[destination.index].groupTitle;
 
-    newLayouts[destination.index].items = tempItems;
-    newLayouts[destination.index].groupTitle = tempTitle;
+      newLayouts[destination.index].items = tempItems;
+      newLayouts[destination.index].groupTitle = tempTitle;
 
-    setLayouts(newLayouts);
+      setLayouts(newLayouts);
+    } else {
+      // If layouts and displayLayouts are different
+      const sourceDisplayGroup = displayLayouts[source.index];
+      const destinationDisplayGroup = displayLayouts[destination.index];
+      console.log("source", sourceDisplayGroup);
+      console.log("destination", destinationDisplayGroup);
+
+      if (sourceDisplayGroup && destinationDisplayGroup) {
+        const sourceGroupId = sourceDisplayGroup.items[0].groupid;
+        const destinationGroupId = destinationDisplayGroup.items[0].groupid;
+
+        const newLayouts = Array.from(layouts);
+        const tempGroup = newLayouts[sourceGroupId];
+        newLayouts[sourceGroupId] = newLayouts[destinationGroupId];
+        newLayouts[destinationGroupId] = tempGroup;
+
+        setLayouts(newLayouts);
+      }
+    }
+
     adjustLayouts();
   };
-
+  // main function that adjusts the layouts on the basis of height and arranges them
   const adjustLayouts = () => {
-    const maxLayoutHeight = 500; // Maximum height for a layout
-    const newLayouts = [];
-    let currentLayout = null; // Initialize currentLayout as null
-    let currentLayoutHeight = 0;
-    let remainingHeightInLayout = maxLayoutHeight; // Initialize the remaining height in the layout
+    const maxLayoutHeight = 500;
+    let newLayouts = [];
+    let currentLayout = { items: [], height: 0 };
 
-    layouts.forEach((group, groupIndex) => {
-      group.items.forEach((obj, index) => {
-        const objHeight = obj.userChanged
-          ? textAreaRefs.current[obj.id].scrollHeight
-          : obj.height;
+    // Flatten all items and keep track of their original group index
+    let allItems = layouts.flatMap((group, groupIndex) =>
+      group.items.map((item) => ({ ...item, originalGroup: groupIndex }))
+    );
 
-        // Check if adding this item to the current layout would exceed the remaining height
-        if (objHeight <= remainingHeightInLayout) {
-          // If it fits, add the item to the current layout
-          if (!currentLayout) {
-            currentLayout = { items: [] };
-          }
-          currentLayout.items.push({ ...obj, height: objHeight });
-          currentLayoutHeight += objHeight;
-          remainingHeightInLayout -= objHeight;
-        } else {
-          // If it doesn't fit, create a new layout
-          if (currentLayout) {
-            newLayouts.push(currentLayout);
-          }
-          currentLayout = null; // Reset currentLayout
-          currentLayoutHeight = 0;
-          remainingHeightInLayout = maxLayoutHeight;
+    // Sort items by their original group to maintain order when moving between layouts
+    allItems = allItems.sort((a, b) => a.originalGroup - b.originalGroup);
 
-          // Add the item to the new layout
-          if (!currentLayout) {
-            currentLayout = { items: [] };
-          }
-          currentLayout.items.push({ ...obj, height: objHeight });
-          currentLayoutHeight += objHeight;
-          remainingHeightInLayout -= objHeight;
+    allItems.forEach((item) => {
+      const itemHeight = item.userChanged
+        ? textAreaRefs.current[item.id].scrollHeight
+        : item.height;
 
-          // Check if there's a next group
-          if (layouts[groupIndex + 1]) {
-            const nextGroup = layouts[groupIndex + 1];
-            if (
-              !currentLayout.items.some(
-                (item) => item.group === nextGroup.groupTitle
-              )
-            ) {
-              for (const nextObj of nextGroup.items) {
-                const nextObjHeight = nextObj.userChanged
-                  ? textAreaRefs.current[nextObj.id].scrollHeight
-                  : nextObj.height;
-                if (nextObjHeight <= remainingHeightInLayout) {
-                  // Add the item from the next group to the current layout
-                  currentLayout.items.push({
-                    ...nextObj,
-                    height: nextObjHeight,
-                    group: nextGroup.groupTitle,
-                  });
-                  currentLayoutHeight += nextObjHeight;
-                  remainingHeightInLayout -= nextObjHeight;
-                } else {
-                  // If it doesn't fit, stop adding items from the next group
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        // If it's the last item of the group and there's more than one group, create a new layout
-        if (index === group.items.length - 1 && layouts.length > 1) {
-          if (currentLayout) {
-            newLayouts.push(currentLayout);
-          }
-          currentLayout = null;
-          currentLayoutHeight = 0;
-          remainingHeightInLayout = maxLayoutHeight;
-        }
-      });
+      // If current layout can fit the item
+      if (currentLayout.height + itemHeight <= maxLayoutHeight) {
+        currentLayout.items.push(item);
+        currentLayout.height += itemHeight;
+      } else {
+        // If the current layout is filled, push it to newLayouts and start a new one
+        newLayouts.push(currentLayout);
+        currentLayout = { items: [item], height: itemHeight };
+      }
     });
 
-    // Add the last layout to newLayouts if it's not null
-    if (currentLayout) {
+    // Add the last layout if it has any items
+    if (currentLayout.items.length > 0) {
       newLayouts.push(currentLayout);
     }
 
-    // Update the display layout with the new arrangement
-    setDisplayLayouts(newLayouts);
+    // Update displayLayouts to match the new arrangement of items
+    setDisplayLayouts(newLayouts.map((layout) => ({ items: layout.items })));
   };
 
   useEffect(() => {
@@ -192,8 +178,16 @@ function Main() {
       }
     });
 
-    return () => observer.disconnect();
-  }, [layouts]);
+    // Re-run the effect when layouts change
+    return () => {
+      Object.values(textAreaRefs.current).forEach((textarea) => {
+        if (textarea) {
+          observer.unobserve(textarea);
+        }
+      });
+      observer.disconnect();
+    };
+  }, [displayLayouts]); // Add layouts as a dependency
 
   const handleManualResize = (id) => {
     const textarea = textAreaRefs.current[id];
@@ -210,6 +204,12 @@ function Main() {
       if (textarea.objHeight !== scrollHeight) {
         textarea.style.height = `${scrollHeight}px`;
         textarea.objHeight = scrollHeight;
+
+        // Set userChanged flag to true when the user manually resizes the textarea
+        if (!textarea.userChanged) {
+          textarea.userChanged = true;
+        }
+
         adjustLayouts();
       }
     }
@@ -228,12 +228,13 @@ function Main() {
     setLayouts(newLayouts);
   };
 
-  const clickme = () => { // Will be seperate for each section, Where you want to add another block
+  const clickme = () => {
+    // Will be seperate for each section, Where you want to add another block
     const newId = `item-${layouts.flat().length + 1}`;
     const newObject = {
       id: newId,
       text: "Random text " + newId,
-     
+
       userChanged: true,
     };
 
@@ -261,6 +262,23 @@ function Main() {
     "lightcoral",
     "lightgrey",
   ];
+  // Create a function to monitor textarea height changes
+  const monitorTextareaHeightChanges = () => {
+    Object.keys(textAreaRefs.current).forEach((textareaId) => {
+      handleManualResize(textareaId);
+    });
+  };
+
+  // Trigger the monitoring function whenever there's a change in textareas
+  useEffect(() => {
+    // Add an event listener to monitor textarea height changes
+    window.addEventListener("input", monitorTextareaHeightChanges);
+
+    return () => {
+      // Remove the event listener when the component unmounts
+      window.removeEventListener("input", monitorTextareaHeightChanges);
+    };
+  }, []);
   return (
     <div className="maindiv">
       {/* <button title="Click me" id="clickme" onClick={clickme}>
@@ -275,10 +293,7 @@ function Main() {
                 {...provided.droppableProps}
                 ref={provided.innerRef}
                 className="centered-box"
-                style={{
-                  backgroundColor:
-                    backgroundColors[groupIndex % backgroundColors.length],
-                }}
+                style={{ backgroundColor: "antiquewhite" }}
               >
                 <Draggable
                   key={groupIndex}
@@ -298,20 +313,38 @@ function Main() {
                       >
                         Drag
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <div className="group-title-label">
-                          <p
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          // backgroundColor:
+                          //   backgroundColors[
+                          //     group.items[0].groupid % backgroundColors.length
+                          //   ],
+                        }}
+                      >
+                        {group.items.map((obj, objIndex) => (
+                          <div
+                            key={obj.id}
                             style={{
-                              color: "black",
-                              fontWeight: "bold",
-                              margin: 0,
+                              marginBottom: "5px",
+                              backgroundColor:
+                                obj.groupTitle == "Experiences"
+                                  ? "lightblue"
+                                  : "lightgreen",
                             }}
                           >
-                            {group.items[0].groupTitle}
-                          </p>
-                        </div>
-                        {group.items.map((obj, objIndex) => (
-                          <div key={obj.id} style={{ marginBottom: "5px" }}>
+                            <div className="group-title-label">
+                              <p
+                                style={{
+                                  color: "black",
+                                  fontWeight: "bold",
+                                  margin: 0,
+                                }}
+                              >
+                                {obj.groupTitle}
+                              </p>
+                            </div>
                             <textarea
                               ref={(el) => (textAreaRefs.current[obj.id] = el)}
                               value={obj.text}

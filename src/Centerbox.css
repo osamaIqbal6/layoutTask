@@ -26,6 +26,7 @@ body, html {
     padding-top: 30px;
     padding-left: 20px;
     margin: 10px;
+    background-color: aquamarine;
     /* Your existing styles for color, etc. */
 }
 
