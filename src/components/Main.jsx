@@ -4,6 +4,7 @@ import "../Centerbox.css";
 
 function Main() {
   const initialLayouts = [
+    //Initial State of ours.
     {
       items: [
         {
@@ -66,6 +67,8 @@ function Main() {
   const [displayLayouts, setDisplayLayouts] = useState(initialLayouts);
   const [layouts, setLayouts] = useState(initialLayouts);
   const textAreaRefs = useRef({});
+  const manuallySetHeights = useRef({});
+  const userInitiatedChange = useRef({});
 
   // Helper function to check if layouts are the same
   const areLayoutsSame = (layouts, displayLayouts) => {
@@ -86,6 +89,7 @@ function Main() {
   };
 
   const onDragEnd = (result) => {
+    //This is the main function thatt is called when Dragging Ends
     const { source, destination } = result;
 
     if (!destination) {
@@ -96,7 +100,8 @@ function Main() {
     const sameLayouts = areLayoutsSame(layouts, displayLayouts);
 
     if (sameLayouts) {
-      // Perform the current switching operation
+      // if the displayLayout and Main Layout are same
+
       const newLayouts = Array.from(layouts);
       const tempItems = newLayouts[source.index].items;
       const tempTitle = newLayouts[source.index].groupTitle;
@@ -110,7 +115,7 @@ function Main() {
 
       setLayouts(newLayouts);
     } else {
-      // If layouts and displayLayouts are different
+      // If layouts and displayLayouts are different then we need to consider different replacing scenarios
       const sourceDisplayGroup = displayLayouts[source.index];
       const destinationDisplayGroup = displayLayouts[destination.index];
       console.log("source", sourceDisplayGroup);
@@ -131,8 +136,13 @@ function Main() {
 
     adjustLayouts();
   };
-  // main function that adjusts the layouts on the basis of height and arranges them
+  useEffect(() => {
+    // Need to adjust the layout everytime the layout Changes after Dragging
+    adjustLayouts();
+  }, [layouts]);
+
   const adjustLayouts = () => {
+    // main function that adjusts the layouts on the basis of height and arranges them
     const maxLayoutHeight = 500;
     let newLayouts = [];
     let currentLayout = { items: [], height: 0 };
@@ -146,9 +156,13 @@ function Main() {
     allItems = allItems.sort((a, b) => a.originalGroup - b.originalGroup);
 
     allItems.forEach((item) => {
-      const itemHeight = item.userChanged
-        ? textAreaRefs.current[item.id].scrollHeight
-        : item.height;
+      // Use stored height if available, otherwise fall back to scrollHeight or default height
+      let itemHeight = manuallySetHeights.current[item.id];
+      if (!itemHeight) {
+        itemHeight = item.userChanged
+          ? textAreaRefs.current[item.id].scrollHeight
+          : item.height;
+      }
 
       // If current layout can fit the item
       if (currentLayout.height + itemHeight <= maxLayoutHeight) {
@@ -170,66 +184,32 @@ function Main() {
     setDisplayLayouts(newLayouts.map((layout) => ({ items: layout.items })));
   };
 
-  useEffect(() => {
-    const observer = new ResizeObserver(adjustLayouts);
-    Object.values(textAreaRefs.current).forEach((textarea) => {
-      if (textarea) {
-        observer.observe(textarea);
-      }
-    });
-
-    // Re-run the effect when layouts change
-    return () => {
-      Object.values(textAreaRefs.current).forEach((textarea) => {
-        if (textarea) {
-          observer.unobserve(textarea);
-        }
-      });
-      observer.disconnect();
-    };
-  }, [displayLayouts]); // Add layouts as a dependency
-
   const handleManualResize = (id) => {
     const textarea = textAreaRefs.current[id];
-    if (textarea && textarea.prevHeight !== textarea.offsetHeight) {
-      textarea.prevHeight = textarea.offsetHeight;
-      handleHeightAdjustment(id);
-    }
-  };
-
-  const handleHeightAdjustment = (id) => {
-    const textarea = textAreaRefs.current[id];
     if (textarea) {
-      const scrollHeight = textarea.scrollHeight;
-      if (textarea.objHeight !== scrollHeight) {
-        textarea.style.height = `${scrollHeight}px`;
-        textarea.objHeight = scrollHeight;
-
-        // Set userChanged flag to true when the user manually resizes the textarea
-        if (!textarea.userChanged) {
-          textarea.userChanged = true;
-        }
-
-        adjustLayouts();
-      }
+      manuallySetHeights.current[id] = textarea.offsetHeight;
+      userInitiatedChange.current[id] = true; // Indicate this is a user-initiated change
+      adjustLayouts();
     }
   };
 
   const handleChange = (groupId, itemId, newText) => {
-    const newLayouts = layouts.map((group, gIndex) =>
-      gIndex === groupId
-        ? group.map((item) =>
-            item.id === itemId
-              ? { ...item, text: newText, userChanged: true }
-              : item
-          )
-        : group
-    );
-    setLayouts(newLayouts);
+    // Used to let the user write text in the Textareas
+    const newDisplayLayouts = displayLayouts.map((group) => ({
+      ...group,
+      items: group.items.map((item) =>
+        item.id === itemId
+          ? { ...item, text: newText, userChanged: true }
+          : item
+      ),
+    }));
+
+    // Update the displayLayouts state with the new copy
+    setDisplayLayouts(newDisplayLayouts);
   };
 
-  const clickme = () => {
-    // Will be seperate for each section, Where you want to add another block
+  const addNewBlock = () => {
+    // This method added the new item into the state
     const newId = `item-${layouts.flat().length + 1}`;
     const newObject = {
       id: newId,
@@ -246,6 +226,7 @@ function Main() {
     });
   };
   const handleDownloadClick = async () => {
+    // Used to print the Two component
     const response = await fetch("http://192.168.18.57:3001/generate-pdf");
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
@@ -256,32 +237,10 @@ function Main() {
     a.click();
     a.remove();
   };
-  const backgroundColors = [
-    "lightblue",
-    "lightgreen",
-    "lightcoral",
-    "lightgrey",
-  ];
-  // Create a function to monitor textarea height changes
-  const monitorTextareaHeightChanges = () => {
-    Object.keys(textAreaRefs.current).forEach((textareaId) => {
-      handleManualResize(textareaId);
-    });
-  };
 
-  // Trigger the monitoring function whenever there's a change in textareas
-  useEffect(() => {
-    // Add an event listener to monitor textarea height changes
-    window.addEventListener("input", monitorTextareaHeightChanges);
-
-    return () => {
-      // Remove the event listener when the component unmounts
-      window.removeEventListener("input", monitorTextareaHeightChanges);
-    };
-  }, []);
   return (
     <div className="maindiv">
-      {/* <button title="Click me" id="clickme" onClick={clickme}>
+      {/* <button title="Click me" id="clickme" onClick={addNewBlock}>
         Click Me
       </button>
       <button onClick={handleDownloadClick}>Download as PDF</button> */}
@@ -317,10 +276,6 @@ function Main() {
                         style={{
                           display: "flex",
                           flexDirection: "column",
-                          // backgroundColor:
-                          //   backgroundColors[
-                          //     group.items[0].groupid % backgroundColors.length
-                          //   ],
                         }}
                       >
                         {group.items.map((obj, objIndex) => (
@@ -346,11 +301,13 @@ function Main() {
                               </p>
                             </div>
                             <textarea
+                              id={obj.id} // Set the id attribute
                               ref={(el) => (textAreaRefs.current[obj.id] = el)}
                               value={obj.text}
                               style={{
                                 fontSize: 20,
-                                height: "110px",
+                                height:
+                                  manuallySetHeights.current[obj.id] || "110px",
                                 overflow: "hidden",
                                 margin: 5,
                               }}
