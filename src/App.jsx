@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import Uppercomponent from "./components/Uppercomponent";
 import Lowercomponent from "./components/LowerComponent";
 import Main from "./components/Main";
+import "./index.css";
 function ScrollToComponent({ componentToScrollTo }) {
   const scrollToRef = useRef(null);
   const { component } = useParams();
@@ -25,9 +26,7 @@ function ScrollToComponent({ componentToScrollTo }) {
 }
 
 function App() {
-  return (
-    <Main />
-  );
+  return <Main />;
 }
 
 export default App;
