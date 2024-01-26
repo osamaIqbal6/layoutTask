@@ -201,7 +201,7 @@ function Main() {
       }
     }
 
-    // adjustRightLayouts();
+    adjustRightLayouts();
   };
   const onDragEnd = (result) => {
     //This is the main function thatt is called when Dragging Ends
@@ -254,76 +254,114 @@ function Main() {
   };
   const onMainDrag = (result) => {
     const { source, destination } = result;
-  
+    console.log(source);
+    console.log(destination);
     // If the item is dropped outside a droppable area
     if (!destination) {
       return;
     }
-  
-    // Dropped within the same list
-    if (source.droppableId === destination.droppableId) {
-      const isLeftLayout = source.droppableId.includes('left');
-      const layouts = isLeftLayout ? leftinitialLayouts : rightinitialLayouts;
-      const sourceGroup = layouts.find(group => group.items.some(item => item.id === result.draggableId));
-      
-      if (sourceGroup) {
-        const newItems = Array.from(sourceGroup.items);
-        const [reorderedItem] = newItems.splice(source.index, 1);
-        newItems.splice(destination.index, 0, reorderedItem);
-  
-        const newLayouts = layouts.map(group => {
-          if (group === sourceGroup) {
-            return { ...group, items: newItems };
-          }
-          return group;
-        });
-  
-        if (isLeftLayout) {
-          setLeftDisplayLayouts(newLayouts);
-        } else {
-          setRightDisplayLayouts(newLayouts);
+
+    // Check if both source and destination droppable IDs start with "left"
+    const isLeftLayout =
+      source.droppableId.startsWith("left") &&
+      destination.droppableId.startsWith("left");
+
+    // Check if both source and destination droppable IDs start with "right"
+    const isRightLayout =
+      source.droppableId.startsWith("right") &&
+      destination.droppableId.startsWith("right");
+
+    if (isLeftLayout) {
+      const sameLayouts = areLayoutsSame(leftLayouts, leftDisplayLayouts);
+
+      if (sameLayouts) {
+        // if the displayLayout and Main Layout are same
+
+        const newLayouts = Array.from(leftLayouts);
+        const tempItems = newLayouts[source.index].items;
+        const tempTitle = newLayouts[source.index].groupTitle;
+
+        newLayouts[source.index].items = newLayouts[destination.index].items;
+        newLayouts[source.index].groupTitle =
+          newLayouts[destination.index].groupTitle;
+
+        newLayouts[destination.index].items = tempItems;
+        newLayouts[destination.index].groupTitle = tempTitle;
+
+        setLeftLayouts(newLayouts);
+      } else {
+        // If layouts and displayLayouts are different then we need to consider different replacing scenarios
+        const sourceDisplayGroup = leftDisplayLayouts[source.index];
+        const destinationDisplayGroup = leftDisplayLayouts[destination.index];
+
+        if (sourceDisplayGroup && destinationDisplayGroup) {
+          // if the two groups are different
+          const sourceGroupId = sourceDisplayGroup.items[0].groupid;
+          const destinationGroupId = destinationDisplayGroup.items[0].groupid;
+
+          const newLayouts = Array.from(leftLayouts);
+          const tempGroup = newLayouts[sourceGroupId];
+          newLayouts[sourceGroupId] = newLayouts[destinationGroupId];
+          newLayouts[destinationGroupId] = tempGroup;
+
+          setLeftLayouts(newLayouts);
         }
       }
+
+      adjustLeftLayouts();
+    } else if (isRightLayout) {
+      const sameLayouts = areLayoutsSame(rightLayouts, rightDisplayLayouts);
+
+      if (sameLayouts) {
+        // if the displayLayout and Main Layout are same
+
+        const newLayouts = Array.from(rightLayouts);
+        const tempItems = newLayouts[source.index].items;
+        const tempTitle = newLayouts[source.index].groupTitle;
+
+        newLayouts[source.index].items = newLayouts[destination.index].items;
+        newLayouts[source.index].groupTitle =
+          newLayouts[destination.index].groupTitle;
+
+        newLayouts[destination.index].items = tempItems;
+        newLayouts[destination.index].groupTitle = tempTitle;
+
+        setrightLayouts(newLayouts);
+      } else {
+        // If layouts and displayLayouts are different then we need to consider different replacing scenarios
+        const sourceDisplayGroup = rightDisplayLayouts[source.index];
+        const destinationDisplayGroup = rightDisplayLayouts[destination.index];
+
+        if (sourceDisplayGroup && destinationDisplayGroup) {
+          // if the two groups are different
+          const sourceGroupId = sourceDisplayGroup.items[0].groupid;
+          const destinationGroupId = destinationDisplayGroup.items[0].groupid;
+
+          const newLayouts = Array.from(rightLayouts);
+          const tempGroup = newLayouts[sourceGroupId];
+          newLayouts[sourceGroupId] = newLayouts[destinationGroupId];
+          newLayouts[destinationGroupId] = tempGroup;
+
+          setrightLayouts(newLayouts);
+        }
+      }
+      adjustRightLayouts();
     } else {
-      // Moving between different lists
-      const sourceLayouts = source.droppableId.includes('left') ? leftinitialLayouts : rightinitialLayouts;
-      const destLayouts = source.droppableId.includes('left') ? rightinitialLayouts : leftinitialLayouts;
-  
-      const sourceGroup = sourceLayouts.find(group => group.items.some(item => item.id === result.draggableId));
-      const destGroup = destLayouts[destination.droppableId.split('-').pop()]; // Assumes droppableId is in the format 'droppable-x'
-  
-      if (sourceGroup && destGroup) {
-        const sourceItems = Array.from(sourceGroup.items);
-        const destItems = Array.from(destGroup.items);
-        const [removedItem] = sourceItems.splice(source.index, 1);
-        destItems.splice(destination.index, 0, removedItem);
-  
-        const newSourceLayouts = sourceLayouts.map(group => {
-          if (group === sourceGroup) {
-            return { ...group, items: sourceItems };
-          }
-          return group;
-        });
-  
-        const newDestLayouts = destLayouts.map(group => {
-          if (group === destGroup) {
-            return { ...group, items: destItems };
-          }
-          return group;
-        });
-  
-        if (source.droppableId.includes('left')) {
-          setLeftDisplayLayouts(newSourceLayouts);
-          setRightDisplayLayouts(newDestLayouts);
-        } else {
-          setRightDisplayLayouts(newSourceLayouts);
-          setLeftDisplayLayouts(newDestLayouts);
-        }
-      }
+      const newLeftLayouts = Array.from(leftLayouts);
+      const newRightLayouts = Array.from(rightLayouts);
+      const tempItems = newLeftLayouts[source.index].items;
+
+      newLeftLayouts[source.index].items =
+        newRightLayouts[destination.index].items;
+
+      newRightLayouts[destination.index].items = tempItems;
+      console.log(newLeftLayouts);
+      console.log(newRightLayouts);
+      setLeftLayouts(newLeftLayouts);
+      setrightLayouts(newRightLayouts);
     }
   };
-  
-  
+
   useEffect(() => {
     adjustLeftLayouts();
     adjustRightLayouts();
@@ -496,7 +534,12 @@ function Main() {
     a.click();
     a.remove();
   };
-
+  const setCommonRef = (el, id) => {
+    // Assign the ref to both left and right text areas using the id
+    lefttextAreaRefs.current[id] = el;
+    righttextAreaRefs.current[id] = el;
+  };
+  
   return (
     <div className="maindiv">
       {/* <button title="Click me" id="clickme" onClick={addNewBlock}>
@@ -505,197 +548,188 @@ function Main() {
       <button onClick={handleDownloadClick}>Download as PDF</button> */}
       <DragDropContext onDragEnd={onMainDrag}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <DragDropContext onDragEnd={onDragEnd}>
-            {leftDisplayLayouts.map((group, groupIndex) => (
-              <Droppable
-                key={groupIndex}
-                droppableId={`droppable-${groupIndex}`}
-              >
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="centered-box "
+          {leftDisplayLayouts.map((group, groupIndex) => (
+            <Droppable
+              key={groupIndex}
+              droppableId={`left-droppable-${groupIndex}`}
+            >
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="centered-box "
+                >
+                  <Draggable
+                    key={groupIndex}
+                    draggableId={`left-draggable-${groupIndex}`}
+                    index={groupIndex}
                   >
-                    <Draggable
-                      key={groupIndex}
-                      draggableId={`draggable-${groupIndex}`}
-                      index={groupIndex}
-                    >
-                      {(providedDraggable) => (
+                    {(providedDraggable) => (
+                      <div
+                        ref={providedDraggable.innerRef}
+                        {...providedDraggable.draggableProps}
+                      >
                         <div
-                          ref={providedDraggable.innerRef}
-                          {...providedDraggable.draggableProps}
+                          className="drag-handle"
+                          {...providedDraggable.dragHandleProps}
+                          style={{ color: "red", display: "flex" }}
+                          onClick={() => console.log(leftDisplayLayouts)}
                         >
-                          <div
-                            className="drag-handle"
-                            {...providedDraggable.dragHandleProps}
-                            style={{ color: "red", display: "flex" }}
-                            onClick={() => console.log(leftDisplayLayouts)}
-                          >
-                            Drag
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                            }}
-                          >
-                            {group.items.map((obj, objIndex) => (
-                              <div
-                                key={obj.id}
-                                style={{
-                                  marginBottom: "5px",
-                                  backgroundColor:
-                                    obj.groupTitle == "Experiences"
-                                      ? "lightblue"
-                                      : "lightgreen",
-                                }}
-                              >
-                                <div className="group-title-label">
-                                  <p
-                                    style={{
-                                      color: "black",
-                                      fontWeight: "bold",
-                                      margin: 0,
-                                    }}
-                                  >
-                                    {obj.groupTitle}
-                                  </p>
-                                </div>
-                                <textarea
-                                  id={obj.id} // Set the id attribute
-                                  ref={(el) =>
-                                    (lefttextAreaRefs.current[obj.id] = el)
-                                  }
-                                  value={obj.text}
-                                  style={{
-                                    fontSize: 20,
-                                    height:
-                                      leftmanuallySetHeights.current[obj.id] ||
-                                      "110px",
-                                    overflow: "hidden",
-                                    margin: 5,
-                                    color:'black'
-                                  }}
-                                  
-                                  onChange={(e) =>
-                                    handleLeftChange(
-                                      group.groupTitle,
-                                      obj.id,
-                                      e.target.value
-                                    )
-                                  }
-                                  onBlur={() => handleLeftManualResize(obj.id)}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                          {provided.placeholder}
+                          Drag
                         </div>
-                      )}
-                    </Draggable>
-                  </div>
-                )}
-              </Droppable>
-            ))}
-          </DragDropContext>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          {group.items.map((obj, objIndex) => (
+                            <div
+                              key={obj.id}
+                              style={{
+                                marginBottom: "5px",
+                                backgroundColor:
+                                  obj.groupTitle == "Experiences"
+                                    ? "lightblue"
+                                    : "lightgreen",
+                              }}
+                            >
+                              <div className="group-title-label">
+                                <p
+                                  style={{
+                                    color: "black",
+                                    fontWeight: "bold",
+                                    margin: 0,
+                                  }}
+                                >
+                                  {obj.groupTitle}
+                                </p>
+                              </div>
+                              <textarea
+                                id={obj.id} // Set the id attribute
+                                ref={(el) => setCommonRef(el, obj.id)}
+                                value={obj.text}
+                                style={{
+                                  fontSize: 20,
+                                  height:
+                                    leftmanuallySetHeights.current[obj.id] ||
+                                    "110px",
+                                  overflow: "hidden",
+                                  margin: 5,
+                                  color: "black",
+                                }}
+                                onChange={(e) =>
+                                  handleLeftChange(
+                                    group.groupTitle,
+                                    obj.id,
+                                    e.target.value
+                                  )
+                                }
+                                onBlur={() => handleLeftManualResize(obj.id)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Draggable>
+                </div>
+              )}
+            </Droppable>
+          ))}
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <DragDropContext onDragEnd={onRightDrag}>
-            {rightDisplayLayouts.map((group, groupIndex) => (
-              <Droppable
-                key={groupIndex}
-                droppableId={`droppable-${groupIndex}`}
-              >
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="centered-box "
+          {rightDisplayLayouts.map((group, groupIndex) => (
+            <Droppable
+              key={groupIndex}
+              droppableId={`right-droppable-${groupIndex}`}
+            >
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="centered-box "
+                >
+                  <Draggable
+                    key={groupIndex}
+                    draggableId={`right-draggable-${groupIndex}`}
+                    index={groupIndex}
                   >
-                    <Draggable
-                      key={groupIndex}
-                      draggableId={`draggable-${groupIndex}`}
-                      index={groupIndex}
-                    >
-                      {(providedDraggable) => (
+                    {(providedDraggable) => (
+                      <div
+                        ref={providedDraggable.innerRef}
+                        {...providedDraggable.draggableProps}
+                      >
                         <div
-                          ref={providedDraggable.innerRef}
-                          {...providedDraggable.draggableProps}
+                          className="drag-handle"
+                          {...providedDraggable.dragHandleProps}
+                          style={{ color: "red", display: "flex" }}
+                          onClick={() => console.log(rightDisplayLayouts)}
                         >
-                          <div
-                            className="drag-handle"
-                            {...providedDraggable.dragHandleProps}
-                            style={{ color: "red", display: "flex" }}
-                            onClick={() => console.log(rightDisplayLayouts)}
-                          >
-                            Drag
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                            }}
-                          >
-                            {group.items.map((obj, objIndex) => (
-                              <div
-                                key={obj.id}
-                                style={{
-                                  marginBottom: "5px",
-                                  backgroundColor:
-                                    obj.groupTitle == "Skills"
-                                      ? "lightgrey"
-                                      : "lightyellow",
-                                }}
-                              >
-                                <div className="group-title-label">
-                                  <p
-                                    style={{
-                                      color: "black",
-                                      fontWeight: "bold",
-                                      margin: 0,
-                                    }}
-                                  >
-                                    {obj.groupTitle}
-                                  </p>
-                                </div>
-                                <textarea
-                                  id={obj.id} // Set the id attribute
-                                  ref={(el) =>
-                                    (righttextAreaRefs.current[obj.id] = el)
-                                  }
-                                  value={obj.text}
-                                  style={{
-                                    fontSize: 20,
-                                    height:
-                                      rightmanuallySetHeights.current[obj.id] ||
-                                      "110px",
-                                    overflow: "hidden",
-                                    margin: 5,
-                                    color:'black'
-                                  }}
-                                  onChange={(e) =>
-                                    handleRightChange(
-                                      group.groupTitle,
-                                      obj.id,
-                                      e.target.value
-                                    )
-                                  }
-                                  onBlur={() => handleRightManualResize(obj.id)}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                          {provided.placeholder}
+                          Drag
                         </div>
-                      )}
-                    </Draggable>
-                  </div>
-                )}
-              </Droppable>
-            ))}
-          </DragDropContext>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          {group.items.map((obj, objIndex) => (
+                            <div
+                              key={obj.id}
+                              style={{
+                                marginBottom: "5px",
+                                backgroundColor:
+                                  obj.groupTitle == "Skills"
+                                    ? "lightgrey"
+                                    : "lightyellow",
+                              }}
+                            >
+                              <div className="group-title-label">
+                                <p
+                                  style={{
+                                    color: "black",
+                                    fontWeight: "bold",
+                                    margin: 0,
+                                  }}
+                                >
+                                  {obj.groupTitle}
+                                </p>
+                              </div>
+                              <textarea
+                                id={obj.id} // Set the id attribute
+                                ref={(el) => setCommonRef(el, obj.id)}
+                                value={obj.text}
+                                style={{
+                                  fontSize: 20,
+                                  height:
+                                    rightmanuallySetHeights.current[obj.id] ||
+                                    "110px",
+                                  overflow: "hidden",
+                                  margin: 5,
+                                  color: "black",
+                                }}
+                                onChange={(e) =>
+                                  handleRightChange(
+                                    group.groupTitle,
+                                    obj.id,
+                                    e.target.value
+                                  )
+                                }
+                                onBlur={() => handleRightManualResize(obj.id)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Draggable>
+                </div>
+              )}
+            </Droppable>
+          ))}
         </div>
       </DragDropContext>
     </div>
