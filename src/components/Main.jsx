@@ -122,6 +122,7 @@ function Main() {
       console.log("destination", destinationDisplayGroup);
 
       if (sourceDisplayGroup && destinationDisplayGroup) {
+        // if the two groups are different
         const sourceGroupId = sourceDisplayGroup.items[0].groupid;
         const destinationGroupId = destinationDisplayGroup.items[0].groupid;
 
