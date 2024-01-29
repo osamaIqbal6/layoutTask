@@ -1,6 +1,6 @@
 import React from "react";
 import { Droppable, Draggable } from "react-beautiful-dnd";
-import { adjustBothLayouts } from "./helpers";
+import { adjustBothLayouts } from "../Helpers/helpers";
 const Layout = ({
   displayLayouts,
   refs,

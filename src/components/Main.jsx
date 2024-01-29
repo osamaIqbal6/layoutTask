@@ -10,7 +10,7 @@ import {
   handleTextChange,
   onDragEnd,
   adjustBothLayouts,
-} from "./helpers";
+} from "../Helpers/helpers";
 import Layout from "./Layout";
 
 function Main() {
