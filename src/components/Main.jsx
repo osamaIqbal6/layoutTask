@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext } from "react-beautiful-dnd";
 import "../Centerbox.css";
 import "../index.css";
 import { initialLeftLayouts, initialRightLayouts } from "./InitialComponents";
 import {
-  areLayoutsSame,
   adjustLayouts,
   handleManualResize,
   handleTextChange,
   onDragEnd,
-  adjustBothLayouts,
 } from "../Helpers/helpers";
 import Layout from "./Layout";
 
@@ -17,20 +15,11 @@ function Main() {
   const [leftDisplayLayouts, setLeftDisplayLayouts] =
     useState(initialLeftLayouts);
   const [leftLayouts, setLeftLayouts] = useState(initialLeftLayouts);
-  const leftRefs = useRef({
-    textAreaRefs: {},
-    manuallySetHeights: {},
-    userInitiatedChange: {},
-  });
-
+  
   const [rightDisplayLayouts, setRightDisplayLayouts] =
     useState(initialRightLayouts);
   const [rightLayouts, setRightLayouts] = useState(initialRightLayouts);
-  const rightRefs = useRef({
-    textAreaRefs: {},
-    manuallySetHeights: {},
-    userInitiatedChange: {},
-  });
+  
   const commonRefs = useRef({
     textAreaRefs: {},
     manuallySetHeights: {},
@@ -54,8 +43,7 @@ function Main() {
             rightDisplayLayouts,
             setLeftDisplayLayouts,
             setRightDisplayLayouts,
-            leftRefs,
-            rightRefs
+            commonRefs
           )
         }
       >

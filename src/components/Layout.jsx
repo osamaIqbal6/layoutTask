@@ -96,9 +96,7 @@ const Layout = ({
                               )
                             }
                             onBlur={() =>
-                              onManualResize(
-                                obj.id,
-                                refs,
+                              onManualResize(obj.id, refs, () =>
                                 adjustBothLayouts(
                                   leftLayouts,
                                   rightLayouts,

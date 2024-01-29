@@ -9,12 +9,18 @@ export const areLayoutsSame = (layouts, displayLayouts) => {
     );
   });
 };
-export const adjustBothLayouts = async (leftLayouts, rightLayouts, commonRefs, setLeftDisplayLayouts, setRightDisplayLayouts) => {
-    // Adjust left layouts
-    adjustLayouts(leftLayouts, commonRefs, setLeftDisplayLayouts);
+export const adjustBothLayouts = async (
+  leftLayouts,
+  rightLayouts,
+  commonRefs,
+  setLeftDisplayLayouts,
+  setRightDisplayLayouts
+) => {
+  // Adjust left layouts
+  adjustLayouts(leftLayouts, commonRefs, setLeftDisplayLayouts);
 
-    // Adjust right layouts
-    adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
+  // Adjust right layouts
+  adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
 };
 
 export const adjustLayouts = (layouts, refs, setDisplayLayouts) => {
@@ -47,12 +53,11 @@ export const adjustLayouts = (layouts, refs, setDisplayLayouts) => {
   setDisplayLayouts(newLayouts.map((layout) => ({ items: layout.items })));
 };
 
-export const handleManualResize = (id, refs, adjustLayoutsFunc) => {
+export const handleManualResize = (id, refs, adjustBothLayouts) => {
   const textarea = refs.current.textAreaRefs[id];
   if (textarea) {
     refs.current.manuallySetHeights[id] = textarea.offsetHeight;
-    refs.current.userInitiatedChange[id] = true;
-    adjustLayoutsFunc();
+    adjustBothLayouts();
   }
 };
 
@@ -81,8 +86,6 @@ export const onDragEnd = (
   commonRefs
 ) => {
   const { source, destination } = result;
-  console.log(source);
-  console.log(destination);
   // If the item is dropped outside a droppable area
   if (!destination) {
     return;
@@ -122,7 +125,8 @@ export const onDragEnd = (
       } else {
         setRightLayouts(newLayouts);
       }
-      adjustLayouts(leftLayouts, leftRefs, setLeftDisplayLayouts);
+      adjustLayouts(leftLayouts, commonRefs, setLeftDisplayLayouts);
+      adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
     } else {
       // If layouts and displayLayouts are different, handle different scenarios
       const sourceDisplayGroup = displayLayouts[source.index];
@@ -143,7 +147,8 @@ export const onDragEnd = (
         } else {
           setRightLayouts(newLayouts);
         }
-        adjustLayouts(leftLayouts, leftRefs, setLeftDisplayLayouts);
+        adjustLayouts(leftLayouts, commonRefs, setLeftDisplayLayouts);
+        adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
       }
     }
   } else {
@@ -158,7 +163,7 @@ export const onDragEnd = (
 
     setLeftLayouts(newLeftLayouts);
     setRightLayouts(newRightLayouts);
-    adjustLayouts(true); // Adjust left layout
-    adjustLayouts(false); // Adjust right layout
+    adjustLayouts(leftLayouts, commonRefs, setLeftDisplayLayouts);
+    adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
   }
 };
