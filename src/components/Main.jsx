@@ -458,6 +458,7 @@ function Main() {
   };
 
   const handleLeftManualResize = (id) => {
+    //Handle resize for the left textAreas, It will not be required in our Use Case
     const textarea = lefttextAreaRefs.current[id];
     if (textarea) {
       leftmanuallySetHeights.current[id] = textarea.offsetHeight;
@@ -467,6 +468,7 @@ function Main() {
   };
 
   const handleRightManualResize = (id) => {
+    //Handle resize for the right textAreas, It will not be required in our Use Case
     const textarea = righttextAreaRefs.current[id];
     if (textarea) {
       rightmanuallySetHeights.current[id] = textarea.offsetHeight;
@@ -476,7 +478,7 @@ function Main() {
   };
 
   const handleLeftChange = (groupId, itemId, newText) => {
-    // Used to let the user write text in the Textareas
+    //Allowing the use to write in  the textareas
     const newDisplayLayouts = leftDisplayLayouts.map((group) => ({
       ...group,
       items: group.items.map((item) =>
@@ -491,7 +493,7 @@ function Main() {
   };
 
   const handleRightChange = (groupId, itemId, newText) => {
-    // Used to let the user write text in the Textareas
+    //Allowing the use to write in  the textareas
     const newDisplayLayouts = rightDisplayLayouts.map((group) => ({
       ...group,
       items: group.items.map((item) =>
@@ -539,15 +541,15 @@ function Main() {
     lefttextAreaRefs.current[id] = el;
     righttextAreaRefs.current[id] = el;
   };
-  
+
   return (
-    <div className="maindiv">
+    <div className="maindiv gap-5">
       {/* <button title="Click me" id="clickme" onClick={addNewBlock}>
         Click Me
       </button>
       <button onClick={handleDownloadClick}>Download as PDF</button> */}
       <DragDropContext onDragEnd={onMainDrag}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div className="flex flex-col">
           {leftDisplayLayouts.map((group, groupIndex) => (
             <Droppable
               key={groupIndex}
@@ -557,7 +559,7 @@ function Main() {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="centered-box "
+                  className="centered-box flex flex-col justify-start items-center w-300 h-700 pt-30 mb-10"
                 >
                   <Draggable
                     key={groupIndex}
@@ -639,7 +641,7 @@ function Main() {
             </Droppable>
           ))}
         </div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div className="flex flex-col">
           {rightDisplayLayouts.map((group, groupIndex) => (
             <Droppable
               key={groupIndex}
@@ -649,7 +651,7 @@ function Main() {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="centered-box "
+                  className="centered-box flex flex-col justify-start items-center w-300 h-700 pt-30 mb-10"
                 >
                   <Draggable
                     key={groupIndex}

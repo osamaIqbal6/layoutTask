@@ -13,7 +13,7 @@ body, html {
     width: 700px;
     margin-top: 50px; /* Adds some space at the top */
     margin-bottom: 50px; /* Adds some space at the bottom */
-    background-color: antiquewhite;
+    background-color: white;
 }
 
 .centered-box, .lower-box {
@@ -30,7 +30,7 @@ body, html {
 }
 
 .centered-box{
-    background-color: aliceblue;
+    background-color: lightgoldenrodyellow;
 }
 .lower-box{
     background-color: aliceblue;
