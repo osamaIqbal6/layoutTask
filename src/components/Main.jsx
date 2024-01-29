@@ -136,122 +136,23 @@ function Main() {
   const righttextAreaRefs = useRef({});
   const rightmanuallySetHeights = useRef({});
   const rightuserInitiatedChange = useRef({});
+
   // Helper function to check if layouts are the same
   const areLayoutsSame = (layouts, displayLayouts) => {
+    // Check if the lengths of layouts and displayLayouts are different
     if (layouts.length !== displayLayouts.length) {
       return false;
     }
 
-    for (let i = 0; i < layouts.length; i++) {
-      if (
-        layouts[i].items.length !== displayLayouts[i].items.length ||
-        layouts[i].groupTitle !== displayLayouts[i].groupTitle
-      ) {
-        return false;
-      }
-    }
-
-    return true;
+    // Check if any individual group's items or groupTitle is different
+    return layouts.every((layout, i) => {
+      return (
+        layout.items.length === displayLayouts[i].items.length &&
+        layout.groupTitle === displayLayouts[i].groupTitle
+      );
+    });
   };
 
-  const onRightDrag = (result) => {
-    //This is the main function thatt is called when Dragging Ends
-    const { source, destination } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    // Check if layouts and displayLayouts are the same
-    const sameLayouts = areLayoutsSame(rightLayouts, rightDisplayLayouts);
-
-    if (sameLayouts) {
-      // if the displayLayout and Main Layout are same
-
-      const newLayouts = Array.from(rightLayouts);
-      const tempItems = newLayouts[source.index].items;
-      const tempTitle = newLayouts[source.index].groupTitle;
-
-      newLayouts[source.index].items = newLayouts[destination.index].items;
-      newLayouts[source.index].groupTitle =
-        newLayouts[destination.index].groupTitle;
-
-      newLayouts[destination.index].items = tempItems;
-      newLayouts[destination.index].groupTitle = tempTitle;
-
-      setrightLayouts(newLayouts);
-    } else {
-      // If layouts and displayLayouts are different then we need to consider different replacing scenarios
-      const sourceDisplayGroup = rightDisplayLayouts[source.index];
-      const destinationDisplayGroup = rightDisplayLayouts[destination.index];
-      console.log("source", sourceDisplayGroup);
-      console.log("destination", destinationDisplayGroup);
-
-      if (sourceDisplayGroup && destinationDisplayGroup) {
-        // if the two groups are different
-        const sourceGroupId = sourceDisplayGroup.items[0].groupid;
-        const destinationGroupId = destinationDisplayGroup.items[0].groupid;
-
-        const newLayouts = Array.from(rightLayouts);
-        const tempGroup = newLayouts[sourceGroupId];
-        newLayouts[sourceGroupId] = newLayouts[destinationGroupId];
-        newLayouts[destinationGroupId] = tempGroup;
-
-        setrightLayouts(newLayouts);
-      }
-    }
-
-    adjustRightLayouts();
-  };
-  const onDragEnd = (result) => {
-    //This is the main function thatt is called when Dragging Ends
-    const { source, destination } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    // Check if layouts and displayLayouts are the same
-    const sameLayouts = areLayoutsSame(leftLayouts, leftDisplayLayouts);
-
-    if (sameLayouts) {
-      // if the displayLayout and Main Layout are same
-
-      const newLayouts = Array.from(leftLayouts);
-      const tempItems = newLayouts[source.index].items;
-      const tempTitle = newLayouts[source.index].groupTitle;
-
-      newLayouts[source.index].items = newLayouts[destination.index].items;
-      newLayouts[source.index].groupTitle =
-        newLayouts[destination.index].groupTitle;
-
-      newLayouts[destination.index].items = tempItems;
-      newLayouts[destination.index].groupTitle = tempTitle;
-
-      setLeftLayouts(newLayouts);
-    } else {
-      // If layouts and displayLayouts are different then we need to consider different replacing scenarios
-      const sourceDisplayGroup = leftDisplayLayouts[source.index];
-      const destinationDisplayGroup = leftDisplayLayouts[destination.index];
-      console.log("source", sourceDisplayGroup);
-      console.log("destination", destinationDisplayGroup);
-
-      if (sourceDisplayGroup && destinationDisplayGroup) {
-        // if the two groups are different
-        const sourceGroupId = sourceDisplayGroup.items[0].groupid;
-        const destinationGroupId = destinationDisplayGroup.items[0].groupid;
-
-        const newLayouts = Array.from(leftLayouts);
-        const tempGroup = newLayouts[sourceGroupId];
-        newLayouts[sourceGroupId] = newLayouts[destinationGroupId];
-        newLayouts[destinationGroupId] = tempGroup;
-
-        setLeftLayouts(newLayouts);
-      }
-    }
-
-    adjustLeftLayouts();
-  };
   const onMainDrag = (result) => {
     const { source, destination } = result;
     console.log(source);
@@ -362,11 +263,6 @@ function Main() {
     }
   };
 
-  useEffect(() => {
-    adjustLeftLayouts();
-    adjustRightLayouts();
-  }, [leftLayouts, rightLayouts]);
-
   const adjustLeftLayouts = () => {
     // main function that adjusts the layouts on the basis of height and arranges them
     const maxLayoutHeight = 500;
@@ -457,6 +353,10 @@ function Main() {
     );
   };
 
+  useEffect(() => {
+    adjustLeftLayouts();
+    adjustRightLayouts();
+  }, [leftLayouts, rightLayouts]);
   const handleLeftManualResize = (id) => {
     //Handle resize for the left textAreas, It will not be required in our Use Case
     const textarea = lefttextAreaRefs.current[id];
