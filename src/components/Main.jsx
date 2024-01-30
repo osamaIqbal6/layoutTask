@@ -39,6 +39,7 @@ function Main() {
         ...rightLayouts.map((layout) => ({ ...layout, groupTitle: "Merged" })),
       ];
     }
+
     return leftLayouts;
   };
 
