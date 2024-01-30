@@ -17,6 +17,6 @@
     "pdf-lib": "^1.17.1",
     "pdf-merge": "^1.2.0",
     "pdf-merger-js": "^5.0.0",
-    "puppeteer": "^21.7.0"
+    "puppeteer": "^21.10.0"
   }
 }

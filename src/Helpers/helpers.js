@@ -167,3 +167,14 @@ export const onDragEnd = (
     adjustLayouts(rightLayouts, commonRefs, setRightDisplayLayouts);
   }
 };
+export const generatePDF = async () => {
+  const response = await fetch("http://192.168.18.72:3001/generate-pdf");
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "page.pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};

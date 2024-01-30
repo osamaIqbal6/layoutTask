@@ -10,10 +10,9 @@ body, html {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    width: 700px;
-    margin-top: 50px; /* Adds some space at the top */
     margin-bottom: 50px; /* Adds some space at the bottom */
     background-color: white;
+    width: 650px;
 }
 
 .centered-box, .lower-box {
@@ -21,20 +20,18 @@ body, html {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    width: 300px;
-    height: 700px;
     padding-top: 30px;
-    padding-left: 20px;
-    margin-bottom: 10px;
     /* Your existing styles for color, etc. */
+}
+/* In your CSS file */
+@media print {
+  
 }
 
 .centered-box{
-    background-color: lightgoldenrodyellow;
+    background-color: rgb(75, 8, 8);
 }
-.lower-box{
-    background-color: aliceblue;
-}
+
 .object-container{
     display: flex;
     text-align: center;

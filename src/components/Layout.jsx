@@ -14,7 +14,7 @@ const Layout = ({
   setRightDisplayLayouts,
 }) => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col ">
       {displayLayouts.map((group, groupIndex) => (
         <Droppable
           key={groupIndex}
@@ -24,7 +24,7 @@ const Layout = ({
             <div
               {...provided.droppableProps}
               ref={provided.innerRef}
-              className="centered-box flex flex-col justify-start items-center w-300 h-700 pt-30 mb-10"
+              className="centered-box flex flex-col  pt-30 mb-10"
             >
               <Draggable
                 key={groupIndex}
@@ -51,10 +51,15 @@ const Layout = ({
                           key={obj.id}
                           style={{
                             marginBottom: "5px",
+                            width: "100%",
                             backgroundColor:
                               obj.groupTitle === "Skills"
                                 ? "lightgrey"
-                                : "lightyellow",
+                                : obj.groupTitle === "Experiences"
+                                ? "lightblue" // Replace 'blue' with your desired color
+                                : obj.groupTitle === "Projects"
+                                ? "green" // Replace 'green' with your desired color
+                                : "lightyellow", // Default color if none of the above
                           }}
                         >
                           <div className="group-title-label">
